@@ -59,25 +59,35 @@ if [ -z "$CENTER" ]; then
   CENTER=0
 fi
 
-# Sometimes bat is installed as batcat.
-if command -v batcat > /dev/null; then
-  BATNAME="batcat"
-elif command -v bat > /dev/null; then
-  BATNAME="bat"
-fi
+nvr -cc "let my_win_id = win_getid() |
+let config = {'relative': 'win', 'row': 10, 'col': 100, 'width': 100, 'height': 100, 'style': 'minimal'} |
+if !exists('my_fzf_preview_window') |
+let my_fzf_preview_window = nvim_open_win(0, v:true, config) |
+endif |
+call win_gotoid(my_fzf_preview_window) |
+execute 'buffer' bufnr('$FILE', 1) |
+$CENTER |
+call win_gotoid(my_win_id)"
 
-if [ -z "$FZF_PREVIEW_COMMAND" ] && [ "${BATNAME:+x}" ]; then
-  ${BATNAME} --style="${BAT_STYLE:-numbers}" --color=always --pager=never \
-      --highlight-line=$CENTER "$FILE"
-  exit $?
-fi
+# # Sometimes bat is installed as batcat.
+# if command -v batcat > /dev/null; then
+#   BATNAME="batcat"
+# elif command -v bat > /dev/null; then
+#   BATNAME="bat"
+# fi
 
-DEFAULT_COMMAND="highlight -O ansi -l {} || coderay {} || rougify {} || cat {}"
-CMD=${FZF_PREVIEW_COMMAND:-$DEFAULT_COMMAND}
-CMD=${CMD//{\}/$(printf %q "$FILE")}
+# if [ -z "$FZF_PREVIEW_COMMAND" ] && [ "${BATNAME:+x}" ]; then
+#   ${BATNAME} --style="${BAT_STYLE:-numbers}" --color=always --pager=never \
+#       --highlight-line=$CENTER "$FILE"
+#   exit $?
+# fi
 
-eval "$CMD" 2> /dev/null | awk "{ \
-    if (NR == $CENTER) \
-        { gsub(/\x1b[[0-9;]*m/, \"&$REVERSE\"); printf(\"$REVERSE%s\n$RESET\", \$0); } \
-    else printf(\"$RESET%s\n\", \$0); \
-    }"
+# DEFAULT_COMMAND="highlight -O ansi -l {} || coderay {} || rougify {} || cat {}"
+# CMD=${FZF_PREVIEW_COMMAND:-$DEFAULT_COMMAND}
+# CMD=${CMD//{\}/$(printf %q "$FILE")}
+
+# eval "$CMD" 2> /dev/null | awk "{ \
+#     if (NR == $CENTER) \
+#         { gsub(/\x1b[[0-9;]*m/, \"&$REVERSE\"); printf(\"$REVERSE%s\n$RESET\", \$0); } \
+#     else printf(\"$RESET%s\n\", \$0); \
+#     }"
